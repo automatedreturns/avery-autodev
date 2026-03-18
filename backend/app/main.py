@@ -15,7 +15,6 @@ from app.api.v1 import (
     coverage,
     github,
     issue_polling,
-    subscriptions,
     test_generation,
     test_policy,
     test_runs,
@@ -177,7 +176,6 @@ app.include_router(issue_polling.router, prefix="/api/v1/workspaces", tags=["iss
 app.include_router(test_suites.router, prefix="/api/v1/workspaces")
 app.include_router(test_runs.router, prefix="/api/v1/workspaces")
 app.include_router(ci_runs.router, prefix="/api/v1")
-app.include_router(subscriptions.router, prefix="/api/v1")
 app.include_router(contact.router, prefix="/api/v1")
 
 # Phase 2: Test-Aware Agent API endpoints

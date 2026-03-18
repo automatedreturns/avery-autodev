@@ -35,4 +35,3 @@ class User(Base):
     # Relationships
     owned_workspaces = relationship("Workspace", back_populates="owner", foreign_keys="Workspace.owner_id")
     workspace_memberships = relationship("WorkspaceMember", back_populates="user")
-    subscription = relationship("Subscription", back_populates="user", uselist=False, cascade="all, delete-orphan")

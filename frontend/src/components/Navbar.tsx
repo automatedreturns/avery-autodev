@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, ChevronDown, LayoutGrid, CreditCard, User, Menu, X } from "lucide-react";
+import { LogOut, ChevronDown, LayoutGrid, User, Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -21,7 +21,6 @@ const Navbar = () => {
 
   const menuItems = [
     { path: '/workspaces', label: 'Workspaces', icon: LayoutGrid },
-    { path: '/billing', label: 'Billing', icon: CreditCard },
     { path: '/profile', label: 'Profile', icon: User },
   ];
 
@@ -77,13 +76,6 @@ const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/pricing"
-                    className="hidden sm:flex px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-accent transition-colors min-h-[44px] items-center"
-                  >
-                    Pricing
-                  </Link>
-                  <Separator orientation="vertical" className="hidden sm:block h-5 mx-1" />
                   <ThemeSwitcher />
                   <Button variant="ghost" size="sm" asChild className="min-h-[44px]">
                     <Link to="/signin">Sign in</Link>
@@ -159,14 +151,6 @@ const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/pricing"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 w-full px-4 py-3 min-h-[48px] text-base font-medium text-foreground hover:bg-muted rounded-lg"
-                  >
-                    Pricing
-                  </Link>
-
                   <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                     <span className="text-sm text-muted-foreground">Theme</span>
                     <ThemeSwitcher />

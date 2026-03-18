@@ -22,9 +22,6 @@ import TestRunResultsPage from "./pages/TestRunResultsPage";
 import CIRunDetailPage from "./pages/CIRunDetailPage";
 import TestGenerationTasksPage from "./pages/TestGenerationTasksPage";
 import TestGenerationDetailPage from "./pages/TestGenerationDetailPage";
-import PricingPage from "./pages/PricingPage";
-import BillingPage from "./pages/BillingPage";
-import CheckoutSuccessPage from "./pages/CheckoutSuccessPage";
 import ContactPage from "./pages/ContactPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -42,7 +39,6 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/signin" element={<SignInPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/contact" element={<ContactPage />} />
             </Route>
 
@@ -155,22 +151,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <GitHubSetupPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing"
-              element={
-                <ProtectedRoute>
-                  <BillingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing/success"
-              element={
-                <ProtectedRoute>
-                  <CheckoutSuccessPage />
                 </ProtectedRoute>
               }
             />

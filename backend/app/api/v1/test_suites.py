@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 from app.api.deps import get_current_user
 from app.core.permissions import get_workspace_or_403, require_workspace_admin
 from app.database import get_db
-from app.models.subscription import EventType
 from app.models.test_case import TestCase
 from app.models.test_run import TestRun
 from app.models.test_suite import TestSuite
@@ -34,7 +33,6 @@ from app.schemas.test_suite import (
     TestSuiteUpdate,
 )
 from app.services.encryption_service import decrypt_token
-from app.services.subscription_service import SubscriptionService
 from app.services.test_analysis_service import (
     TestAnalysisError,
     analyze_repository_for_tests,
@@ -657,39 +655,6 @@ def analyze_tests(
     """
     workspace, membership = get_workspace_or_403(workspace_id, db, current_user)
 
-    # CHECK QUOTA FIRST
-    quota_check = SubscriptionService.check_quota(
-        db, current_user.id, EventType.TEST_GENERATION
-    )
-
-    if not quota_check["allowed"]:
-        detail = {
-            "error": "quota_exceeded",
-            "used": quota_check["used"],
-            "quota": quota_check["quota"],
-            "plan": quota_check["plan"],
-            "overage_credits": quota_check["overage_credits"],
-        }
-
-        if quota_check["requires_upgrade"]:
-            detail["message"] = (
-                f"You've used all {quota_check['quota']} free test generations this month. "
-                "Upgrade to Pro for 30 test generations/month."
-            )
-            detail["upgrade_url"] = "/pricing"
-        elif quota_check["can_purchase_overage"]:
-            detail["message"] = (
-                f"You've reached your monthly limit of {quota_check['quota']} test generations. "
-                f"Purchase additional credits for ${quota_check['overage_price_cents'] / 100:.2f} each."
-            )
-            detail["overage_price_cents"] = quota_check["overage_price_cents"]
-            detail["purchase_url"] = "/api/v1/subscriptions/purchase-overage"
-
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=detail,
-        )
-
     # Verify test suite exists
     test_suite = (
         db.query(TestSuite)
@@ -712,15 +677,6 @@ def analyze_tests(
 
     # Decrypt GitHub token
     github_token = decrypt_token(current_user.github_token_encrypted)
-
-    # RECORD USAGE
-    SubscriptionService.record_usage(
-        db,
-        current_user.id,
-        EventType.TEST_GENERATION,
-        workspace_id=workspace_id,
-        resource_id=f"analyze_{suite_id}",
-    )
 
     # Perform analysis
     try:
@@ -915,39 +871,6 @@ def generate_test_code(
 
     workspace, membership = get_workspace_or_403(workspace_id, db, current_user)
 
-    # CHECK QUOTA FIRST
-    quota_check = SubscriptionService.check_quota(
-        db, current_user.id, EventType.TEST_GENERATION
-    )
-
-    if not quota_check["allowed"]:
-        detail = {
-            "error": "quota_exceeded",
-            "used": quota_check["used"],
-            "quota": quota_check["quota"],
-            "plan": quota_check["plan"],
-            "overage_credits": quota_check["overage_credits"],
-        }
-
-        if quota_check["requires_upgrade"]:
-            detail["message"] = (
-                f"You've used all {quota_check['quota']} free test generations this month. "
-                "Upgrade to Pro for 30 test generations/month."
-            )
-            detail["upgrade_url"] = "/pricing"
-        elif quota_check["can_purchase_overage"]:
-            detail["message"] = (
-                f"You've reached your monthly limit of {quota_check['quota']} test generations. "
-                f"Purchase additional credits for ${quota_check['overage_price_cents'] / 100:.2f} each."
-            )
-            detail["overage_price_cents"] = quota_check["overage_price_cents"]
-            detail["purchase_url"] = "/api/v1/subscriptions/purchase-overage"
-
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=detail,
-        )
-
     # Verify test suite exists
     test_suite = (
         db.query(TestSuite)
@@ -997,15 +920,6 @@ def generate_test_code(
 
     # Decrypt GitHub token
     github_token = decrypt_token(current_user.github_token_encrypted)
-
-    # RECORD USAGE
-    SubscriptionService.record_usage(
-        db,
-        current_user.id,
-        EventType.TEST_GENERATION,
-        workspace_id=workspace_id,
-        resource_id=f"generate_{suite_id}_{job.id}",
-    )
 
     # Run generation in background
     background_tasks.add_task(
