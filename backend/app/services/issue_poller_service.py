@@ -8,13 +8,11 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.subscription import EventType
 from app.models.workspace import Workspace
 from app.models.workspace_task import WorkspaceTask
 from app.models.polling_status import PollingStatus
 from app.services.encryption_service import decrypt_token
 from app.services.git_providers import get_git_provider_for_workspace
-from app.services.subscription_service import SubscriptionService
 
 logger = logging.getLogger(__name__)
 
@@ -170,15 +168,6 @@ You have full autonomy to resolve conflicts. Do NOT ask for permission before ea
         )
 
         logger.info(f"Queued agent processing for PR conflict resolution task {task_id} in workspace {workspace_id}")
-
-        # Record usage for auto-execution (polled PR)
-        SubscriptionService.record_usage(
-            db,
-            workspace.owner_id,
-            EventType.AGENT_EXECUTION,
-            workspace_id=workspace_id,
-            resource_id=str(task_id),
-        )
 
     except Exception as e:
         logger.error(f"Error in PR conflict resolution for task {task_id}: {str(e)}")
@@ -337,15 +326,6 @@ You have full autonomy to make code changes. Do NOT ask for permission before ea
         )
 
         logger.info(f"Queued agent processing for task {task_id} in workspace {workspace_id}")
-
-        # Record usage for auto-execution (polled issue)
-        SubscriptionService.record_usage(
-            db,
-            workspace.owner_id,
-            EventType.AGENT_EXECUTION,
-            workspace_id=workspace_id,
-            resource_id=str(task_id),
-        )
 
     except Exception as e:
         logger.error(f"Error in auto-analysis for task {task_id}: {str(e)}")

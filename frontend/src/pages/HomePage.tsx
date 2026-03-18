@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { Button } from '@/components/ui/button';
-import { Bot, GitBranch, Code, Lock, Zap, Users, ArrowRight, Check, Sparkles, MousePointer2 } from 'lucide-react';
+import { Bot, GitBranch, Code, Lock, Zap, Users, ArrowRight, Sparkles, MousePointer2 } from 'lucide-react';
 
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth();
@@ -52,39 +52,6 @@ const HomePage = () => {
       title: 'Team Workspaces',
       description: 'Collaborate with role-based access control.',
       gradient: 'from-indigo-500 to-blue-500',
-    },
-  ];
-
-  const plans = [
-    {
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
-      description: 'Perfect for trying out Avery',
-      features: ['3 agent executions/month', '5 test generations/month', 'GitHub integration', 'Community support'],
-      cta: 'Get Started',
-      variant: 'outline' as const,
-      popular: false,
-    },
-    {
-      name: 'Pro',
-      price: '$79',
-      period: '/month',
-      description: 'For serious developers',
-      features: ['25 agent executions/month', '50 test generations/month', 'Priority support', 'Usage analytics'],
-      cta: 'Start Pro',
-      variant: 'gradient' as const,
-      popular: true,
-    },
-    {
-      name: 'Team',
-      price: '$249',
-      period: '/month',
-      description: 'For teams & orgs',
-      features: ['100 agent executions/month', '200 test generations/month', 'Dedicated support', 'Advanced analytics'],
-      cta: 'Contact Sales',
-      variant: 'outline' as const,
-      popular: false,
     },
   ];
 
@@ -222,78 +189,6 @@ const HomePage = () => {
           ))}
         </div>
       </section>
-
-      {/* Pricing Section */}
-      {!isAuthenticated && (
-        <section className="py-20 md:py-28">
-          <div className="text-center mb-16">
-            <span className="text-sm font-semibold text-primary uppercase tracking-widest">Pricing</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-4 tracking-tight">
-              Simple, transparent pricing
-            </h2>
-            <p className="text-lg text-muted-foreground mt-4 font-light">
-              Start free, scale as you grow
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className={`relative p-6 rounded-2xl transition-all duration-300 ${
-                  plan.popular
-                    ? 'bg-gradient-to-b from-primary/10 to-card border-2 border-primary/50 shadow-xl shadow-primary/10 scale-105 z-10'
-                    : 'bg-card/50 border border-border/50 hover:border-border hover:shadow-lg'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="px-4 py-1 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-xs font-semibold uppercase tracking-wider shadow-lg">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
-                </div>
-
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                  <span className="text-muted-foreground ml-1">{plan.period}</span>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  variant={plan.variant}
-                  className="w-full h-11 rounded-xl font-medium transition-all duration-300"
-                  asChild
-                >
-                  <Link to={plan.popular ? '/signup' : '/pricing'} className="no-underline">
-                    {plan.cta}
-                  </Link>
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            All plans include GitHub integration and secure authentication.{' '}
-            <Link to="/pricing" className="text-primary hover:underline font-medium">
-              Compare all features
-            </Link>
-          </p>
-        </section>
-      )}
 
       {/* Final CTA */}
       {!isAuthenticated && (

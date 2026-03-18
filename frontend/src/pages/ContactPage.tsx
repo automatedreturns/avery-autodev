@@ -63,7 +63,7 @@ export default function ContactPage() {
 
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
-    navigate('/pricing');
+    navigate('/');
   };
 
   return (
@@ -73,11 +73,11 @@ export default function ContactPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/pricing')}
+          onClick={() => navigate('/')}
           className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Pricing
+          Back to Home
         </Button>
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
@@ -179,7 +179,7 @@ export default function ContactPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/')}
               className="h-12 px-6 rounded-xl border-border/50 hover:bg-muted/50 hover:border-border transition-all duration-300"
             >
               Cancel
@@ -223,7 +223,7 @@ export default function ContactPage() {
               onClick={handleSuccessClose}
               className="h-11 px-6 rounded-xl"
             >
-              Back to Pricing
+              Back to Home
             </Button>
           </div>
         </DialogContent>

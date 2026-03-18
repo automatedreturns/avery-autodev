@@ -8,10 +8,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.permissions import get_workspace_or_403
 from app.database import get_db
-from app.models.subscription import EventType
 from app.models.user import User
 from app.models.workspace_task import WorkspaceTask
-from app.services.subscription_service import SubscriptionService
 from app.schemas.workspace_task import (
     AvailableIssuesResponse,
     FeatureRequestCreate,
@@ -254,15 +252,6 @@ Feel free to read relevant files to better understand the codebase structure."""
             task_id,
             auto_user_message.id,
             token
-        )
-
-        # Record usage for auto-execution
-        SubscriptionService.record_usage(
-            db,
-            task.added_by_user_id,
-            EventType.AGENT_EXECUTION,
-            workspace_id=workspace_id,
-            resource_id=str(task_id),
         )
 
     except Exception as e:

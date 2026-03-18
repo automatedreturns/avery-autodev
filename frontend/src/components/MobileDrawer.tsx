@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Logo } from './Logo';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { X, ArrowRight, DollarSign, Mail, LogIn, UserPlus, LayoutGrid } from 'lucide-react';
+import { X, ArrowRight, Mail, LogIn, UserPlus, LayoutGrid } from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -85,7 +85,6 @@ export const MobileDrawer = ({ isOpen, onClose, isAuthenticated }: MobileDrawerP
   };
 
   const navLinks = [
-    { path: '/pricing', label: 'Pricing', icon: DollarSign },
     { path: '/contact', label: 'Contact', icon: Mail },
   ];
 

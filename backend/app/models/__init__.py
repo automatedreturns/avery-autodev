@@ -18,14 +18,6 @@ from app.models.ci_run import CIRun
 # Phase 2: Test generation and coverage tracking
 from app.models.agent_test_generation import AgentTestGeneration
 from app.models.coverage_snapshot import CoverageSnapshot
-from app.models.subscription import (
-    Subscription,
-    SubscriptionPlan,
-    SubscriptionStatus,
-    UsageRecord,
-    EventType,
-    OveragePurchase,
-)
 
 __all__ = [
     "User",
@@ -47,10 +39,4 @@ __all__ = [
     # Phase 2 models
     "AgentTestGeneration",
     "CoverageSnapshot",
-    "Subscription",
-    "SubscriptionPlan",
-    "SubscriptionStatus",
-    "UsageRecord",
-    "EventType",
-    "OveragePurchase",
 ]

@@ -43,9 +43,6 @@ export const PublicHeader = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Pricing
-              </Link>
               <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Contact
               </Link>
