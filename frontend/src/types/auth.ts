@@ -17,11 +17,19 @@ export interface AuthResponse {
   token_type: string;
 }
 
+export interface AuthFeatures {
+  password: boolean;
+  magic_link: boolean;
+  google: boolean;
+}
+
 export interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
   isAuthenticated: boolean;
+  authFeatures: AuthFeatures | null;
+  login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
