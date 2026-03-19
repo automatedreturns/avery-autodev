@@ -1,9 +1,12 @@
 """Test Run and Test Result API endpoints."""
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.api.deps import get_current_user
 from app.core.permissions import get_workspace_or_403
@@ -67,7 +70,7 @@ def _execute_test_run_background(
             db=db,
         )
     except Exception as e:
-        print(f"Background test execution error: {e}")
+        logger.error(f"Background test execution error: {e}")
     finally:
         db.close()
 

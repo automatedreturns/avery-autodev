@@ -6,10 +6,13 @@ before pull requests are created by the coding agent.
 """
 
 import json
+import logging
 import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy.orm import Session
 
@@ -45,10 +48,10 @@ class PrePRPolicyService:
         try:
             repo_path = Path(repo_path)
             if not repo_path.exists():
-                print(f"[ERROR] Repository path does not exist: {repo_path}")
+                logger.error(f"Repository path does not exist: {repo_path}")
                 return None
 
-            print(f"[INFO] Collecting coverage for {workspace.name} at {repo_path}")
+            logger.info(f"Collecting coverage for {workspace.name} at {repo_path}")
 
             # Run tests with coverage
             # Try pytest first (most common), then fallback to other test runners
@@ -59,12 +62,12 @@ class PrePRPolicyService:
                 coverage_data = PrePRPolicyService._run_npm_coverage(repo_path)
 
             if coverage_data:
-                print(f"[INFO] Coverage collected: {coverage_data.get('coverage_percent', 0):.1f}%")
+                logger.info(f"Coverage collected: {coverage_data.get('coverage_percent', 0):.1f}%")
 
             return coverage_data
 
         except Exception as e:
-            print(f"[ERROR] Failed to collect coverage: {str(e)}")
+            logger.error(f"Failed to collect coverage: {str(e)}")
             return None
 
     @staticmethod
@@ -80,10 +83,10 @@ class PrePRPolicyService:
             )
 
             if not has_pytest:
-                print("[DEBUG] Not a Python project, skipping pytest coverage")
+                logger.debug("Not a Python project, skipping pytest coverage")
                 return None
 
-            print("[DEBUG] Running pytest with coverage...")
+            logger.debug("Running pytest with coverage...")
 
             # Run pytest with coverage report as JSON
             result = subprocess.run(
@@ -101,7 +104,7 @@ class PrePRPolicyService:
                 coverage_json_path = repo_path / "coverage.json"
 
             if not coverage_json_path.exists():
-                print("[DEBUG] No coverage JSON file found")
+                logger.debug("No coverage JSON file found")
                 return None
 
             # Parse coverage JSON
@@ -112,13 +115,13 @@ class PrePRPolicyService:
             return PrePRPolicyService._transform_pytest_coverage(coverage_json, repo_path)
 
         except subprocess.TimeoutExpired:
-            print("[ERROR] Pytest coverage timeout (5 minutes)")
+            logger.error("Pytest coverage timeout (5 minutes)")
             return None
         except FileNotFoundError:
-            print("[DEBUG] pytest not found in PATH")
+            logger.debug("pytest not found in PATH")
             return None
         except Exception as e:
-            print(f"[ERROR] Failed to run pytest coverage: {str(e)}")
+            logger.error(f"Failed to run pytest coverage: {str(e)}")
             return None
 
     @staticmethod
@@ -163,7 +166,7 @@ class PrePRPolicyService:
             }
 
         except Exception as e:
-            print(f"[ERROR] Failed to transform pytest coverage: {str(e)}")
+            logger.error(f"Failed to transform pytest coverage: {str(e)}")
             return {
                 "coverage_percent": 0.0,
                 "lines_covered": 0,
@@ -180,10 +183,10 @@ class PrePRPolicyService:
             # Check if package.json exists (Node.js project)
             package_json = repo_path / "package.json"
             if not package_json.exists():
-                print("[DEBUG] Not a Node.js project, skipping npm coverage")
+                logger.debug("Not a Node.js project, skipping npm coverage")
                 return None
 
-            print("[DEBUG] Running npm test with coverage...")
+            logger.debug("Running npm test with coverage...")
 
             # Run npm test (many projects have "test" script configured with coverage)
             result = subprocess.run(
@@ -197,7 +200,7 @@ class PrePRPolicyService:
             # Coverage JSON is typically at coverage/coverage-summary.json
             coverage_json_path = repo_path / "coverage" / "coverage-summary.json"
             if not coverage_json_path.exists():
-                print("[DEBUG] No coverage summary JSON found")
+                logger.debug("No coverage summary JSON found")
                 return None
 
             # Parse coverage JSON
@@ -208,13 +211,13 @@ class PrePRPolicyService:
             return PrePRPolicyService._transform_npm_coverage(coverage_json, repo_path)
 
         except subprocess.TimeoutExpired:
-            print("[ERROR] npm test coverage timeout (5 minutes)")
+            logger.error("npm test coverage timeout (5 minutes)")
             return None
         except FileNotFoundError:
-            print("[DEBUG] npm not found in PATH")
+            logger.debug("npm not found in PATH")
             return None
         except Exception as e:
-            print(f"[ERROR] Failed to run npm coverage: {str(e)}")
+            logger.error(f"Failed to run npm coverage: {str(e)}")
             return None
 
     @staticmethod
@@ -260,7 +263,7 @@ class PrePRPolicyService:
             }
 
         except Exception as e:
-            print(f"[ERROR] Failed to transform npm coverage: {str(e)}")
+            logger.error(f"Failed to transform npm coverage: {str(e)}")
             return {
                 "coverage_percent": 0.0,
                 "lines_covered": 0,
@@ -297,7 +300,7 @@ class PrePRPolicyService:
             - snapshot_id is the created coverage snapshot ID
         """
         try:
-            print(f"[INFO] Enforcing test policies for task {task.id}")
+            logger.info(f"Enforcing test policies for task {task.id}")
 
             # Create coverage snapshot
             analyzer = TestCoverageAnalyzer(db)
@@ -309,12 +312,12 @@ class PrePRPolicyService:
                 pr_number=None  # No PR yet
             )
 
-            print(f"[INFO] Created coverage snapshot {snapshot.id}")
+            logger.info(f"Created coverage snapshot {snapshot.id}")
 
             # Get test policy for workspace
             test_policy = db.query(workspace.__class__).filter_by(id=workspace.id).first()
             if not test_policy or not test_policy.test_policy_enabled:
-                print("[INFO] Test policy not enabled for workspace, allowing PR creation")
+                logger.info("Test policy not enabled for workspace, allowing PR creation")
                 return True, None, snapshot.id
 
             # Enforce policies
@@ -336,24 +339,22 @@ class PrePRPolicyService:
             task.coverage_snapshot_id = snapshot.id
             db.commit()
 
-            print(f"[INFO] Policy decision: passed={policy_decision.passed}, violations={len(policy_decision.violations)}")
+            logger.info(f"Policy decision: passed={policy_decision.passed}, violations={len(policy_decision.violations)}")
 
             # Check if there are ERROR-level violations
             error_violations = [v for v in policy_decision.violations if v.severity == "error"]
 
             if error_violations:
-                print(f"[WARNING] {len(error_violations)} error-level policy violations found, blocking PR creation")
+                logger.warning(f"{len(error_violations)} error-level policy violations found, blocking PR creation")
                 return False, policy_decision.dict(), snapshot.id
 
             if policy_decision.warnings:
-                print(f"[INFO] {len(policy_decision.warnings)} warnings found, allowing PR with warning comment")
+                logger.info(f"{len(policy_decision.warnings)} warnings found, allowing PR with warning comment")
 
             return True, policy_decision.dict(), snapshot.id
 
         except Exception as e:
-            print(f"[ERROR] Failed to enforce policies: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Failed to enforce policies: {str(e)}", exc_info=True)
             # On error, allow PR creation but log the issue
             return True, None, None
 

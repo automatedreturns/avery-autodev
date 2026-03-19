@@ -1,10 +1,14 @@
 """Email service for sending magic link authentication emails."""
 
+import logging
+
 import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 async def send_magic_link_email(to_email: str, magic_link: str) -> bool:
@@ -100,7 +104,7 @@ The Avery Team
         return True
 
     except Exception as e:
-        print(f"Failed to send email to {to_email}: {str(e)}")
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
 
 
@@ -191,5 +195,5 @@ This inquiry was submitted through the Avery contact form.
         return True
 
     except Exception as e:
-        print(f"Failed to send contact sales email: {str(e)}")
+        logger.error(f"Failed to send contact sales email: {str(e)}")
         return False

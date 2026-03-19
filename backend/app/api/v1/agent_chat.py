@@ -520,7 +520,7 @@ def _create_pull_request_automatically(
         # ============================================================
         policy_check_result = None
         if task.local_repo_path and workspace.test_policy_enabled:
-            print(f"[INFO] Test policy enabled - collecting coverage and enforcing policies")
+            logger.info("Test policy enabled - collecting coverage and enforcing policies")
 
             # Collect coverage from repository
             coverage_data = PrePRPolicyService.collect_coverage(
@@ -570,7 +570,7 @@ def _create_pull_request_automatically(
                         "coverage_percent": coverage_data.get("coverage_percent", 0.0)
                     }
             else:
-                print(f"[WARNING] Could not collect coverage - proceeding with PR creation")
+                logger.warning("Could not collect coverage - proceeding with PR creation")
         # ============================================================
         # END OF NEW POLICY ENFORCEMENT CODE
         # ============================================================
@@ -637,7 +637,7 @@ The agent has implemented the necessary changes to address this issue. Please re
             )
 
             if not comment_result.get("success"):
-                print(f"[WARNING] Failed to post PR comment: {comment_result.get('error')}")
+                logger.warning(f"Failed to post PR comment: {comment_result.get('error')}")
                 # Don't fail the entire PR creation if comment fails
 
         # NEW: Post policy check results as PR comment if there were warnings
@@ -906,14 +906,14 @@ Continue from where the previous session left off. The user's new message follow
 
                     # Call SDK with streaming
                     if should_resume:
-                        print(f"[DEBUG] Resuming SDK session {task.claude_session_id} for task {task_id}")
+                        logger.debug(f"Resuming SDK session {task.claude_session_id} for task {task_id}")
                         _save_progress_message(db, task_id, "🔄 Resuming previous conversation session...")
                     elif compacted_summary:
-                        print(f"[DEBUG] Starting fresh SDK session with compacted context for task {task_id}")
+                        logger.debug(f"Starting fresh SDK session with compacted context for task {task_id}")
                         _save_progress_message(db, task_id, "🔄 Starting fresh session with compacted context...")
                     else:
-                        print(f"[DEBUG] Starting new SDK session for task {task_id}")
-                    print(f"[DEBUG] Starting SDK query for task {task_id} (max_turns={current_max_turns}) with prompt: {prompt_string[:100]}...")
+                        logger.debug(f"Starting new SDK session for task {task_id}")
+                    logger.debug(f"Starting SDK query for task {task_id} (max_turns={current_max_turns}) with prompt: {prompt_string[:100]}...")
                     _save_progress_message(db, task_id, "🔍 Querying Claude Agent SDK...")
 
                     _client = ClaudeSDKClient(options=agent_options)
@@ -936,8 +936,8 @@ Continue from where the previous session left off. The user's new message follow
                 except Exception as e:
                     import traceback
                     error_str = str(e).lower()
-                    print(f"[ERROR] SDK query failed: {str(e)}")
-                    traceback.print_exc()
+                    logger.error(f"SDK query failed: {str(e)}")
+                    logger.error(traceback.format_exc())
 
                     # Check for context/prompt length errors
                     is_context_error = any(keyword in error_str for keyword in [
@@ -1052,7 +1052,7 @@ Continue from where the previous session left off. The user's new message follow
                 # Natural completion or IMPLEMENTATION_COMPLETE found
                 break
 
-        print(f"[DEBUG] SDK query completed for task {task_id}, assistant_content length: {len(assistant_content)}")
+        logger.debug(f"SDK query completed for task {task_id}, assistant_content length: {len(assistant_content)}")
 
         # KEEP: Completion logic (lines 1011-1067 from original)
         if not assistant_content or not assistant_content.strip():
@@ -1170,7 +1170,7 @@ Continue from where the previous session left off. The user's new message follow
     except asyncio.CancelledError:
         # Task was cancelled by user
         _save_progress_message(db, task_id, "⏹️ Agent execution stopped by user")
-        print(f"Agent task {task_id} was cancelled")
+        logger.info(f"Agent task {task_id} was cancelled")
         raise  # Re-raise to mark task as cancelled
 
     except Exception as e:
@@ -1187,8 +1187,8 @@ Continue from where the previous session left off. The user's new message follow
         db.add(error_message)
         db.commit()
 
-        print(f"SDK agent processing error for task {task_id}:")
-        print(traceback.format_exc())
+        logger.error(f"SDK agent processing error for task {task_id}:")
+        logger.error(traceback.format_exc())
 
     finally:
         db.close()
@@ -1266,7 +1266,7 @@ def _process_message(message, db, task_id: str, repo_path: str, run_state: dict 
             if task:
                 task.claude_session_id = session_id
                 db.commit()
-                print(f"[DEBUG] Saved Claude session_id {session_id} for task {task_id}")
+                logger.debug(f"Saved Claude session_id {session_id} for task {task_id}")
 
         # Track run state for iteration/context management
         if run_state is not None:
@@ -1309,7 +1309,7 @@ def _process_message(message, db, task_id: str, repo_path: str, run_state: dict 
             if usage:
                 input_tokens = usage.get('input_tokens', 0)
                 output_tokens = usage.get('output_tokens', 0)
-                print(f"Tokens: {input_tokens + output_tokens:,} ({input_tokens:,} in / {output_tokens:,} out)")
+                logger.info(f"Tokens: {input_tokens + output_tokens:,} ({input_tokens:,} in / {output_tokens:,} out)")
 
             _save_progress_message(db, task_id, "\n".join(summary_parts))
 
