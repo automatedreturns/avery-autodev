@@ -1,9 +1,12 @@
 """Workspace task management API endpoints."""
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.api.deps import get_current_user
 from app.core.permissions import get_workspace_or_403
@@ -256,7 +259,7 @@ Feel free to read relevant files to better understand the codebase structure."""
 
     except Exception as e:
         # Log error but don't fail the task creation
-        print(f"Error in initial analysis for task {task_id}: {str(e)}")
+        logger.error(f"Error in initial analysis for task {task_id}: {str(e)}")
     finally:
         db.close()
 
@@ -391,7 +394,7 @@ Feel free to explore the codebase and make changes as needed.""",
 
     except Exception as e:
         # Log error but don't fail the task creation
-        print(f"Error initializing PR task {task_id}: {str(e)}")
+        logger.error(f"Error initializing PR task {task_id}: {str(e)}")
     finally:
         db.close()
 

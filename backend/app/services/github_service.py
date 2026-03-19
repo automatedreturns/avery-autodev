@@ -1,10 +1,13 @@
 """GitHub API integration service using PyGithub."""
 
+import logging
 import time
 from typing import Any
 
 import httpx
 from github import Auth, Github, GithubException
+
+logger = logging.getLogger(__name__)
 
 
 # Simple in-memory cache with TTL
@@ -771,7 +774,7 @@ def create_pull_request(
                 pr.add_to_assignees(*assignees)
             except GithubException as e:
                 # Don't fail the entire PR creation if assignment fails
-                print(f"Warning: Failed to assign users to PR: {str(e)}")
+                logger.warning(f"Failed to assign users to PR: {str(e)}")
 
         return {
             "success": True,

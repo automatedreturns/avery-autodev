@@ -369,7 +369,7 @@ def execute_coder_agent(
 
         if existing_pr_result.get("error"):
             # Log warning but continue with PR creation attempt
-            print(f"[WARNING] Error checking for existing PR: {existing_pr_result['error']}")
+            logger.warning(f"Error checking for existing PR: {existing_pr_result['error']}")
 
         if existing_pr_result.get("found"):
             existing_pr = existing_pr_result["pr"]
