@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     # Backend URL (for webhooks from GitHub Actions)
     BACKEND_URL: str = "http://localhost:8000"
 
+    # Authentication Methods (enable/disable)
+    AUTH_PASSWORD_ENABLED: bool = True
+    AUTH_MAGIC_LINK_ENABLED: bool = False
+    AUTH_GOOGLE_ENABLED: bool = False
+
     # SMTP Settings for Magic Link
     SMTP_HOST: str = "smtp.office365.com"
     SMTP_PORT: int = 587

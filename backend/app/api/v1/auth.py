@@ -10,13 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.config import settings
-from app.core.security import create_access_token
+from app.core.security import create_access_token, get_password_hash, verify_password
 from app.database import get_db
 from app.models.magic_link import MagicLinkToken
 from app.models.user import User
 from app.schemas.magic_link import MagicLinkRequest, MagicLinkResponse, MagicLinkVerify
 from app.schemas.token import Token
-from app.schemas.user import UserResponse
+from app.schemas.user import UserCreate, UserResponse
 from app.services.email_service import send_magic_link_email
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -36,25 +36,132 @@ oauth.register(
 )
 
 
+class LoginRequest(BaseModel):
+    """Schema for email+password login."""
+    email: EmailStr
+    password: str
+
+
+# ─── Auth Features Endpoint ──────────────────────────────────────────
+
+@router.get("/features")
+def get_auth_features():
+    """Return which authentication methods are enabled."""
+    return {
+        "password": settings.AUTH_PASSWORD_ENABLED,
+        "magic_link": settings.AUTH_MAGIC_LINK_ENABLED,
+        "google": settings.AUTH_GOOGLE_ENABLED,
+    }
+
+
+# ─── Password Auth Endpoints ─────────────────────────────────────────
+
+@router.post("/register", response_model=Token)
+def register(
+    user_data: UserCreate,
+    db: Annotated[Session, Depends(get_db)]
+):
+    """Register a new user with email and password."""
+    if not settings.AUTH_PASSWORD_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Password authentication is disabled"
+        )
+
+    email = user_data.email.lower()
+
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this email already exists"
+        )
+
+    # Auto-generate username from email
+    username = email.split('@')[0]
+    base_username = username
+    counter = 1
+    while db.query(User).filter(User.username == username).first():
+        username = f"{base_username}{counter}"
+        counter += 1
+
+    user = User(
+        email=email,
+        username=username,
+        hashed_password=get_password_hash(user_data.password),
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    # Return token so user is logged in immediately after registration
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/login", response_model=Token)
+def login(
+    login_data: LoginRequest,
+    db: Annotated[Session, Depends(get_db)]
+):
+    """Authenticate with email and password."""
+    if not settings.AUTH_PASSWORD_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Password authentication is disabled"
+        )
+
+    email = login_data.email.lower()
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not user.hashed_password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    if not verify_password(login_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user"
+        )
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+# ─── Magic Link Endpoints ────────────────────────────────────────────
+
 @router.post("/magic-link/request", response_model=MagicLinkResponse)
 async def request_magic_link(
     request_data: MagicLinkRequest,
     db: Annotated[Session, Depends(get_db)]
 ):
-    """
-    Request a magic link to be sent to the user's email.
-    Creates user if they don't exist.
+    """Request a magic link to be sent to the user's email."""
+    if not settings.AUTH_MAGIC_LINK_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Magic link authentication is disabled"
+        )
 
-    Args:
-        request_data: Email address to send magic link to
-        db: Database session
-
-    Returns:
-        Success message
-
-    Raises:
-        HTTPException: If email sending fails
-    """
     email = request_data.email.lower()
 
     # Check if user exists, if not create them
@@ -115,19 +222,13 @@ def verify_magic_link(
     verify_data: MagicLinkVerify,
     db: Annotated[Session, Depends(get_db)]
 ):
-    """
-    Verify magic link token and return access token.
+    """Verify magic link token and return access token."""
+    if not settings.AUTH_MAGIC_LINK_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Magic link authentication is disabled"
+        )
 
-    Args:
-        verify_data: Magic link token
-        db: Database session
-
-    Returns:
-        JWT access token
-
-    Raises:
-        HTTPException: If token is invalid or expired
-    """
     # Find token in database
     magic_token = db.query(MagicLinkToken).filter(
         MagicLinkToken.token == verify_data.token
@@ -182,48 +283,34 @@ def verify_magic_link(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+# ─── Current User ────────────────────────────────────────────────────
+
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: Annotated[User, Depends(get_current_user)]):
-    """
-    Get current authenticated user.
-
-    Args:
-        current_user: Current authenticated user from token
-
-    Returns:
-        Current user data
-    """
+    """Get current authenticated user."""
     return current_user
 
 
+# ─── Google OAuth Endpoints ──────────────────────────────────────────
+
 @router.get("/google/login")
 async def google_login(request: Request):
-    """
-    Initiate Google OAuth login flow.
-
-    Returns:
-        Redirect URL to Google's authorization page
-    """
+    """Initiate Google OAuth login flow."""
+    if not settings.AUTH_GOOGLE_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Google authentication is disabled"
+        )
     redirect_uri = settings.GOOGLE_REDIRECT_URI
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
 @router.get("/google/callback")
 async def google_callback(request: Request, db: Annotated[Session, Depends(get_db)]):
-    """
-    Handle Google OAuth callback and create/login user.
-    Redirects to frontend with token in URL.
+    """Handle Google OAuth callback and create/login user."""
+    if not settings.AUTH_GOOGLE_ENABLED:
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/signin?error=google_auth_disabled")
 
-    Args:
-        request: FastAPI request object
-        db: Database session
-
-    Returns:
-        Redirect to frontend with access token
-
-    Raises:
-        HTTPException: If OAuth flow fails
-    """
     try:
         # Get OAuth token from Google
         token = await oauth.google.authorize_access_token(request)
@@ -231,7 +318,6 @@ async def google_callback(request: Request, db: Annotated[Session, Depends(get_d
         # Get user info from Google
         user_info = token.get('userinfo')
         if not user_info:
-            # Redirect to frontend with error
             return RedirectResponse(url=f"{settings.FRONTEND_URL}/signin?error=failed_to_get_user_info")
 
         google_id = user_info.get('sub')
@@ -239,7 +325,6 @@ async def google_callback(request: Request, db: Annotated[Session, Depends(get_d
         picture = user_info.get('picture')
 
         if not google_id or not email:
-            # Redirect to frontend with error
             return RedirectResponse(url=f"{settings.FRONTEND_URL}/signin?error=missing_user_info")
 
         # Check if user exists by google_id
@@ -290,6 +375,5 @@ async def google_callback(request: Request, db: Annotated[Session, Depends(get_d
         return RedirectResponse(url=f"{settings.FRONTEND_URL}/auth/google/callback?token={access_token}")
 
     except Exception as e:
-        # Redirect to frontend with error
         error_message = str(e).replace(" ", "_")
         return RedirectResponse(url=f"{settings.FRONTEND_URL}/signin?error={error_message}")
