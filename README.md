@@ -2,6 +2,8 @@
 
 Open-source AI coding agent that autonomously resolves GitHub issues, generates tests, and fixes CI failures.
 
+**[Documentation](https://avery.tools/docs)** · **[Architecture](https://avery.tools/docs/architecture)** · **[Quick Start](https://avery.tools/docs/quickstart)** · **[Self-Hosting](https://avery.tools/docs/self-hosting)**
+
 ## What It Does
 
 - **Agent Execution** — Point AutoDev at a GitHub issue, it analyzes the codebase, writes code, and opens a PR
