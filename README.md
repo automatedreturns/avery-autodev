@@ -2,7 +2,7 @@
 
 Open-source AI coding agent that autonomously resolves GitHub issues, generates tests, and fixes CI failures.
 
-**[Homepage](https://avery.tools)** · **[Documentation](https://avery.tools/docs)** · **[Architecture](https://avery.tools/docs/architecture)** · **[Quick Start](https://avery.tools/docs/quickstart)** · **[Self-Hosting](https://avery.tools/docs/self-hosting)**
+**[Home](https://avery.tools)** · **[Documentation](https://avery.tools/docs)** · **[Architecture](https://avery.tools/docs/architecture)** · **[Quick Start](https://avery.tools/docs/quickstart)** · **[Self-Hosting](https://avery.tools/docs/self-hosting)**
 
 ## What It Does
 
@@ -104,25 +104,25 @@ AVERY_PLUGIN_CLASS=my_package.MyPlugin
 
 Key environment variables (see `backend/.env.example` for full list):
 
-| Variable | Required | Description |
-|---|---|---|
-| `SECRET_KEY` | Yes | JWT signing key |
-| `ANTHROPIC_API_KEY` | Yes* | Claude API key |
-| `OPENAI_API_KEY` | No | OpenAI API key |
-| `GEMINI_API_KEY` | No | Gemini API key |
-| `DATABASE_URL` | No | Default: SQLite |
+| Variable            | Required | Description     |
+| ------------------- | -------- | --------------- |
+| `SECRET_KEY`        | Yes      | JWT signing key |
+| `ANTHROPIC_API_KEY` | Yes\*    | Claude API key  |
+| `OPENAI_API_KEY`    | No       | OpenAI API key  |
+| `GEMINI_API_KEY`    | No       | Gemini API key  |
+| `DATABASE_URL`      | No       | Default: SQLite |
 
-*At least one AI provider key is required.
+\*At least one AI provider key is required.
 
 ## API Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/v1/workspaces/{id}/tasks/{id}/execute` | Run the coding agent |
-| GET | `/api/v1/workspaces` | List workspaces |
-| POST | `/api/v1/test-generation/generate` | Generate tests |
-| POST | `/api/v1/ci-runs/{id}/fix` | Auto-fix CI failure |
-| GET | `/docs` | Interactive API docs |
+| Method | Path                                         | Description          |
+| ------ | -------------------------------------------- | -------------------- |
+| POST   | `/api/v1/workspaces/{id}/tasks/{id}/execute` | Run the coding agent |
+| GET    | `/api/v1/workspaces`                         | List workspaces      |
+| POST   | `/api/v1/test-generation/generate`           | Generate tests       |
+| POST   | `/api/v1/ci-runs/{id}/fix`                   | Auto-fix CI failure  |
+| GET    | `/docs`                                      | Interactive API docs |
 
 ## Contributing
 
