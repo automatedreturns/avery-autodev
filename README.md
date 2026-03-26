@@ -2,7 +2,7 @@
 
 Open-source AI coding agent that autonomously resolves GitHub issues, generates tests, and fixes CI failures.
 
-**[Documentation](https://avery.tools/docs)** · **[Architecture](https://avery.tools/docs/architecture)** · **[Quick Start](https://avery.tools/docs/quickstart)** · **[Self-Hosting](https://avery.tools/docs/self-hosting)**
+**[Homepage](https://avery.tools)** · **[Documentation](https://avery.tools/docs)** · **[Architecture](https://avery.tools/docs/architecture)** · **[Quick Start](https://avery.tools/docs/quickstart)** · **[Self-Hosting](https://avery.tools/docs/self-hosting)**
 
 ## What It Does
 
